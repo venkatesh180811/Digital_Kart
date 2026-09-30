@@ -4,20 +4,17 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Virtual environment
+# Virtual Environment
 .venv/
 venv/
 env/
 
-# Environment variables
+# Environment variables / secrets
 .env
 
 # Django
 db.sqlite3
 *.log
-
-# Media files
-media/
 
 # IDE
 .vscode/
@@ -26,3 +23,11 @@ media/
 # OS
 .DS_Store
 Thumbs.db
+
+# Python tools
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
