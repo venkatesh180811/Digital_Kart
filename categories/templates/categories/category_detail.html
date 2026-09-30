@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_css %}
+<style>
+.filter-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.filter-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.filter-sidebar-card {
+  position: sticky;
+  top: 100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.filter-sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-sidebar-header i {
+  color: var(--teal-500);
+}
+
+.filter-sidebar-body {
+  padding: 16px 20px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.filter-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-600);
+  margin-bottom: 10px;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text-900);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-option:hover {
+  color: var(--teal-500);
+}
+
+.filter-option input[type="checkbox"],
+.filter-option input[type="radio"] {
+  accent-color: var(--teal-500);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.filter-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-400);
+}
+
+.filter-price-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-price-inputs input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--bg);
+  transition: var(--transition);
+  font-family: var(--font-body);
+}
+
+.filter-price-inputs input:focus {
+  outline: none;
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 3px rgba(0, 194, 168, 0.08);
+}
+
+.filter-price-inputs span {
+  color: var(--text-400);
+  font-size: 13px;
+}
+
+.filter-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.filter-preset-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text-600);
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  font-family: var(--font-body);
+}
+
+.filter-preset-btn:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-500);
+}
+
+.filter-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  text-decoration: none;
+  font-family: var(--font-body);
+  border: none;
+}
+
+.filter-btn-primary {
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: white;
+}
+
+.filter-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 194, 168, 0.3);
+}
+
+.filter-btn-outline {
+  background: transparent;
+  color: var(--text-900);
+  border: 1px solid var(--border);
+}
+
+.filter-btn-outline:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-500);
+}
+
+.active-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(0, 194, 168, 0.08);
+  border: 1px solid rgba(0, 194, 168, 0.2);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal-500);
+}
+
+.chip-remove {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 194, 168, 0.2);
+  color: var(--teal-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.chip-remove:hover {
+  background: var(--teal-500);
+  color: white;
+}
+
+.mobile-filter-bar {
+  display: none;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mobile-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-900);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-body);
+}
+
+.mobile-filter-btn:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-500);
+}
+
+.filter-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 20, 43, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.filter-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filter-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  max-width: 85vw;
+  height: 100vh;
+  background: var(--surface);
+  z-index: 9999;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+
+.filter-drawer.open {
+  transform: translateX(0);
+}
+
+.filter-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-drawer-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-drawer-title i {
+  color: var(--teal-500);
+}
+
+.filter-drawer-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-900);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.filter-drawer-close:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-500);
+}
+
+.filter-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.filter-drawer-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+}
+
+.filter-drawer-footer .filter-btn {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .filter-layout {
+    flex-direction: column;
+  }
+
+  .filter-sidebar {
+    display: none;
+  }
+
+  .mobile-filter-bar {
+    display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-drawer {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 24px 20px;">
+  <div class="filter-layout">
+    <div class="filter-main">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-grid-2"></i> {{ category.name }}</h2>
+        <span style="font-size: 14px; color: var(--text-600);">{{ page_obj.paginator.count }} products</span>
+      </div>
+
+      {% if active_filters %}
+      <div class="active-chips">
+        {% for f in active_filters %}
+          <span class="chip">
+            {{ f.label }}
+            {% if f.type == 'price' %}
+              <a href="?{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.discount %}&discount={{ request.GET.discount }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}" class="chip-remove">&times;</a>
+            {% else %}
+              <a href="?{% if request.GET.brand %}{% if f.type != 'brand' %}&brand={{ request.GET.brand }}{% endif %}{% endif %}{% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}{% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}{% if request.GET.rating %}{% if f.type != 'rating' %}&rating={{ request.GET.rating }}{% endif %}{% endif %}{% if request.GET.in_stock %}{% if f.type != 'in_stock' %}&in_stock={{ request.GET.in_stock }}{% endif %}{% endif %}{% if request.GET.discount %}{% if f.type != 'discount' %}&discount={{ request.GET.discount }}{% endif %}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}" class="chip-remove">&times;</a>
+            {% endif %}
+          </span>
+        {% endfor %}
+        <a href="?" class="chip-remove" style="background:rgba(255,255,255,0.8); color:var(--text-600); border:1px solid var(--border);">Clear All</a>
+      </div>
+      {% endif %}
+
+      <div class="mobile-filter-bar">
+        <button class="mobile-filter-btn" id="mobile-filter-toggle">
+          <i class="fa-solid fa-filter"></i> Filters
+        </button>
+        <form method="get" style="display:flex; gap:8px; flex:1;">
+          <input type="hidden" name="brand" value="{{ request.GET.brand }}">
+          <input type="hidden" name="min_price" value="{{ request.GET.min_price }}">
+          <input type="hidden" name="max_price" value="{{ request.GET.max_price }}">
+          <input type="hidden" name="rating" value="{{ request.GET.rating }}">
+          <input type="hidden" name="in_stock" value="{{ request.GET.in_stock }}">
+          <input type="hidden" name="discount" value="{{ request.GET.discount }}">
+          <select name="sort" onchange="this.form.submit()" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:var(--surface); font-family:var(--font-body);">
+            <option value="">Sort</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Rating</option>
+            <option value="popularity" {% if sort == 'popularity' %}selected{% endif %}>Most Popular</option>
+            <option value="discount" {% if sort == 'discount' %}selected{% endif %}>Highest Discount</option>
+          </select>
+        </form>
+      </div>
+
+      <div class="listing-list">
+        {% for product in page_obj %}{% include "products/partials/product_list_item.html" %}{% endfor %}
+      </div>
+
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}{% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}{% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.discount %}&discount={{ request.GET.discount }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="btn btn-outline">
+            <i class="fa-solid fa-chevron-left"></i> Previous
+          </a>
+        {% endif %}
+
+        <div class="pagination-pages">
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <span class="pagination-active">{{ num }}</span>
+            {% else %}
+              <a href="?page={{ num }}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}{% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}{% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.discount %}&discount={{ request.GET.discount }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-link">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}{% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}{% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.discount %}&discount={{ request.GET.discount }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="btn btn-outline">
+            Next <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="filter-sidebar">
+      <div class="filter-sidebar-card">
+        <div class="filter-sidebar-header">
+          <i class="fa-solid fa-filter"></i> Filters
+        </div>
+        <div class="filter-sidebar-body">
+          <form method="get" id="filter-form">
+            <input type="hidden" name="sort" value="{{ sort }}">
+            {% include "products/partials/filter_form.html" %}
+            <div class="filter-actions">
+              <button type="submit" class="filter-btn filter-btn-primary">Apply Filters</button>
+              <a href="?sort={{ sort }}" class="filter-btn filter-btn-outline">Clear All</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="filter-drawer-overlay" id="filter-drawer-overlay"></div>
+<div class="filter-drawer" id="filter-drawer">
+  <div class="filter-drawer-header">
+    <div class="filter-drawer-title"><i class="fa-solid fa-filter"></i> Filters</div>
+    <button class="filter-drawer-close" id="filter-drawer-close"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="filter-drawer-body">
+    <form method="get" id="filter-form-drawer">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      {% include "products/partials/filter_form.html" %}
+    </form>
+  </div>
+  <div class="filter-drawer-footer">
+    <a href="?sort={{ sort }}" class="filter-btn filter-btn-outline">Clear</a>
+    <button type="submit" form="filter-form-drawer" class="filter-btn filter-btn-primary">Apply</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  var drawer = document.getElementById('filter-drawer');
+  var overlay = document.getElementById('filter-drawer-overlay');
+  var toggle = document.getElementById('mobile-filter-toggle');
+  var close = document.getElementById('filter-drawer-close');
+
+  function openDrawer() {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  if (toggle) toggle.addEventListener('click', openDrawer);
+  if (close) close.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+
+  document.querySelectorAll('#filter-form-drawer input').forEach(function(input) {
+    input.addEventListener('change', function() {
+      setTimeout(closeDrawer, 150);
+    });
+  });
+})();
+</script>
+{% endblock %}

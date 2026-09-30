@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Wishlist — DigitalKart{% endblock %}
+{% block content %}
+<div class="container" style="padding: 30px 20px;">
+  <div class="section-header">
+    <h2><i class="fa-solid fa-heart"></i> My Wishlist</h2>
+    <span style="font-size: 14px; color: var(--text-600);">{{ items|length }} items</span>
+  </div>
+  
+  {% if items %}
+  <div class="wishlist-grid">
+    {% for item in items %}
+    <div class="card wishlist-card">
+      <a href="{{ item.product.get_absolute_url }}" class="wishlist-image-link">
+        <div class="wishlist-image">
+          {% with item.product.images.first as img %}
+            {% if img %}
+              <img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+            {% else %}
+              <div class="wishlist-placeholder">
+                <i class="fa-solid fa-image"></i>
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </a>
+      <div class="wishlist-body">
+        <a href="{{ item.product.get_absolute_url }}" class="wishlist-name">{{ item.product.name|truncatechars:40 }}</a>
+        <div class="wishlist-price">₹{{ item.product.price }}</div>
+        <div class="wishlist-actions">
+          <form method="post" action="{% url 'wishlist:wishlist_move_to_cart' item.product.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-primary" title="Move to Cart">
+              <i class="fa-solid fa-cart-plus"></i>
+            </button>
+          </form>
+          <form method="post" action="{% url 'cart:buy_now' item.product.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-accent" title="Buy Now" {% if not item.product.in_stock %}disabled{% endif %}>
+              <i class="fa-solid fa-bolt"></i>
+            </button>
+          </form>
+          <form method="post" action="{% url 'wishlist:wishlist_remove' item.product.id %}" style="display: inline;" onsubmit="return confirm('Remove from wishlist?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-ghost" title="Remove">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state-large">
+    <i class="fa-solid fa-heart-crack"></i>
+    <h3>Your wishlist is empty</h3>
+    <p>Save items you love to your wishlist</p>
+    <a href="{% url 'products:product_list' %}" class="btn btn-primary">Browse Products</a>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.wishlist-card {
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.wishlist-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(18, 20, 43, 0.12);
+}
+
+.wishlist-image-link {
+  display: block;
+}
+
+.wishlist-image {
+  height: 180px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.wishlist-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  transition: var(--transition);
+}
+
+.wishlist-card:hover .wishlist-image img {
+  transform: scale(1.05);
+}
+
+.wishlist-placeholder {
+  font-size: 36px;
+  color: var(--text-400);
+  opacity: 0.5;
+}
+
+.wishlist-body {
+  padding: 16px;
+}
+
+.wishlist-name {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-900);
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.wishlist-name:hover {
+  color: var(--teal-500);
+}
+
+.wishlist-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--teal-500);
+  margin-bottom: 12px;
+}
+
+.wishlist-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.empty-state-large {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-state-large i {
+  font-size: 64px;
+  color: var(--text-400);
+  opacity: 0.3;
+  margin-bottom: 16px;
+}
+
+.empty-state-large h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--text-900);
+}
+
+.empty-state-large p {
+  color: var(--text-600);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .wishlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .wishlist-image {
+    height: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wishlist-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}

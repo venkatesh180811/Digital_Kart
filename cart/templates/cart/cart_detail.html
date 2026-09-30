@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Shopping Cart — DigitalKart{% endblock %}
+{% block content %}
+<div class="container" style="padding: 30px 20px;">
+  <div class="cart-grid">
+    
+    <!-- Cart Items -->
+    <div class="cart-items">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-cart-shopping"></i> My Cart</h2>
+          <span class="cart-count">{{ cart.total_items }} items</span>
+        </div>
+        <div class="card-body">
+          {% for item in items %}
+          <div class="cart-item">
+            <div class="cart-item-image">
+              {% with item.product.images.first as img %}
+                {% if img %}
+                  <img src="{{ img.image.url }}" alt="{{ item.product.name }}">
+                {% else %}
+                  <div class="cart-item-placeholder">
+                    <i class="fa-solid fa-image"></i>
+                  </div>
+                {% endif %}
+              {% endwith %}
+            </div>
+            <div class="cart-item-details">
+              <a href="{{ item.product.get_absolute_url }}" class="cart-item-name">{{ item.product.name }}</a>
+              <div class="cart-item-price">₹{{ item.product.price }} each</div>
+              <form method="post" action="{% url 'cart:cart_update' item.id %}" class="cart-item-form">
+                {% csrf_token %}
+                <div class="quantity-control">
+                  <input type="number" name="quantity" value="{{ item.quantity }}" min="0" class="quantity-input">
+                  <button type="submit" class="btn btn-sm btn-outline">Update</button>
+                </div>
+              </form>
+              <div class="cart-item-actions">
+                <form method="post" action="{% url 'cart:cart_save_for_later' item.id %}" style="display:inline;" onsubmit="return confirm('Save this item for later?')">
+                  {% csrf_token %}
+                  <button type="submit" class="action-link">Save for later</button>
+                </form>
+                <form method="post" action="{% url 'cart:cart_remove' item.id %}" style="display:inline;" onsubmit="return confirm('Remove this item from cart?')">
+                  {% csrf_token %}
+                  <button type="submit" class="action-link action-link-danger">Remove</button>
+                </form>
+              </div>
+            </div>
+            <div class="cart-item-total">
+              <span class="line-total">₹{{ item.line_total }}</span>
+            </div>
+          </div>
+          {% empty %}
+          <div class="empty-state">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <p>Your cart is empty</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary">Start Shopping</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if saved_items %}
+      <div class="card saved-items-card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-clock"></i> Saved for Later</h3>
+        </div>
+        <div class="card-body">
+          {% for item in saved_items %}
+          <div class="saved-item">
+            <span class="saved-item-name">{{ item.product.name }}</span>
+            <div class="saved-item-actions">
+              <a href="{% url 'cart:cart_move_to_cart' item.id %}" class="btn btn-sm btn-primary">Move to Cart</a>
+              <form method="post" action="{% url 'cart:cart_remove' item.id %}" style="display:inline;" onsubmit="return confirm('Remove this saved item?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--coral-500); border-color: var(--coral-500);">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Order Summary -->
+    {% if items %}
+    <div class="cart-summary">
+      <div class="card summary-card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-receipt"></i> Price Details</h3>
+        </div>
+        <div class="card-body">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ cart.subtotal }}</span>
+          </div>
+          <div class="summary-row">
+            <span>GST (18%)</span>
+            <span>₹{{ gst }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span class="{% if shipping == 0 %}free-shipping{% endif %}">{% if shipping == 0 %}FREE{% else %}₹{{ shipping }}{% endif %}</span>
+          </div>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <span>₹{{ grand_total }}</span>
+          </div>
+          <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-block">
+            <i class="fa-solid fa-lock"></i> Proceed to Checkout
+          </a>
+          <a href="{% url 'products:product_list' %}" class="btn btn-outline btn-block mt-2">
+            Continue Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.cart-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+.cart-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-image {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cart-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cart-item-placeholder {
+  font-size: 24px;
+  color: var(--text-400);
+}
+
+.cart-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-900);
+  display: block;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-item-price {
+  font-size: 13px;
+  color: var(--text-600);
+  margin-bottom: 8px;
+}
+
+.cart-item-form {
+  margin-bottom: 8px;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-input {
+  width: 56px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-align: center;
+}
+
+.cart-item-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.action-link {
+  font-size: 12px;
+  color: var(--text-600);
+  transition: var(--transition);
+}
+
+.action-link:hover {
+  color: var(--teal-500);
+}
+
+.action-link-danger {
+  color: var(--coral-500);
+}
+
+.action-link-danger:hover {
+  color: #dc2626;
+}
+
+.cart-item-total {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 80px;
+}
+
+.line-total {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--teal-500);
+}
+
+.cart-count {
+  font-size: 13px;
+  color: var(--text-600);
+  font-weight: 500;
+}
+
+.summary-card {
+  position: sticky;
+  top: 100px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 8px 0;
+  color: var(--text-600);
+}
+
+.summary-total {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-900);
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.free-shipping {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.mt-2 {
+  margin-top: 12px;
+}
+
+.saved-items-card {
+  margin-top: 20px;
+}
+
+.saved-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.saved-item:last-child {
+  border-bottom: none;
+}
+
+.saved-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .cart-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cart-summary {
+    order: -1;
+  }
+  
+  .summary-card {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .cart-item {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .cart-item-image {
+    width: 100%;
+    height: 160px;
+  }
+  
+  .cart-item-total {
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+}
+</style>
+{% endblock %}

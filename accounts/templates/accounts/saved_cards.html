@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Saved Cards — DigitalKart{% endblock %}
+{% block content %}
+<div class="container" style="padding: 30px 20px;">
+  <div class="section-header">
+    <h2><i class="fa-solid fa-credit-card"></i> Saved Cards</h2>
+    <button class="btn btn-primary" onclick="document.getElementById('add-card-modal').style.display='flex'">
+      <i class="fa-solid fa-plus"></i> Add Card
+    </button>
+  </div>
+
+  {% if cards %}
+  <div class="saved-cards-grid">
+    {% for card in cards %}
+    <div class="card saved-card-item">
+      <div class="saved-card-header">
+        <div class="saved-card-brand">
+          <i class="fa-solid fa-credit-card"></i>
+          <span>{{ card.card_brand|default:"Card" }} ****{{ card.last4 }}</span>
+        </div>
+        {% if card.gateway_token == "default" %}
+        <span class="badge-default">Default</span>
+        {% endif %}
+      </div>
+      <div class="saved-card-body">
+        <div class="saved-card-detail">
+          <span class="saved-card-label">Expires</span>
+          <span class="saved-card-value">{{ card.expiry_month|stringformat:"02d" }}/{{ card.expiry_year }}</span>
+        </div>
+      </div>
+      <div class="saved-card-actions">
+        {% if card.gateway_token != "default" %}
+        <form method="post" action="{% url 'accounts:saved_card_set_default' card.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline">Set Default</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{% url 'accounts:saved_card_remove' card.id %}" style="display:inline;" onsubmit="return confirm('Remove this card?')">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--coral-500); border-color: var(--coral-500);">
+            <i class="fa-solid fa-trash"></i> Remove
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state-large">
+    <i class="fa-solid fa-credit-card"></i>
+    <h3>No saved cards</h3>
+    <p>Save your card details for faster checkout</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Card Modal -->
+<div id="add-card-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Add Saved Card</h3>
+      <button class="modal-close" onclick="document.getElementById('add-card-modal').style.display='none'">&times;</button>
+    </div>
+    <form method="post" action="{% url 'accounts:saved_card_add' %}" class="modal-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Card Brand</label>
+        <select name="card_brand" class="form-select" required>
+          <option value="">Select brand</option>
+          <option value="Visa">Visa</option>
+          <option value="Mastercard">Mastercard</option>
+          <option value="Amex">American Express</option>
+          <option value="RuPay">RuPay</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last 4 Digits</label>
+        <input type="text" name="last4" class="form-input" maxlength="4" pattern="\d{4}" placeholder="1234" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Expiry Month</label>
+          <input type="number" name="expiry_month" class="form-input" min="1" max="12" placeholder="MM" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expiry Year</label>
+          <input type="number" name="expiry_year" class="form-input" min="2024" max="2040" placeholder="YYYY" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gateway Token</label>
+        <input type="text" name="gateway_token" class="form-input" placeholder="token from payment gateway" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">
+        <i class="fa-solid fa-plus"></i> Save Card
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+.saved-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.saved-card-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: var(--transition);
+}
+
+.saved-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(18, 20, 43, 0.1);
+}
+
+.saved-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.saved-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-900);
+}
+
+.saved-card-brand i {
+  color: var(--teal-500);
+  font-size: 18px;
+}
+
+.badge-default {
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: white;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.saved-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.saved-card-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.saved-card-label {
+  color: var(--text-600);
+}
+
+.saved-card-value {
+  font-weight: 600;
+  color: var(--text-900);
+}
+
+.saved-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 20, 43, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-600);
+  line-height: 1;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .saved-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — DigitalKart{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 560px; padding: 40px 20px;">
+  <div class="card" style="padding: 32px;">
+    <h1 style="font-size: 20px; margin-bottom: 20px;">{{ title }}</h1>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="form-errors">{{ field.errors|striptags }}</div>{% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-block">Save Address</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

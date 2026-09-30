@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}My Addresses — DigitalKart{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 720px; padding: 40px 20px;">
+  <div class="section-title"><h2>My Addresses</h2><a href="{% url 'accounts:address_add' %}">+ Add New Address</a></div>
+  {% for address in addresses %}
+    <div class="card" style="padding: 18px 22px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: start;">
+      <div>
+        <strong>{{ address.full_name }}</strong>
+        <span style="background: var(--bg); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; padding: 2px 8px; margin-left: 8px; text-transform: capitalize;">{{ address.address_type }}</span>
+        {% if address.is_default %}<span style="color: var(--teal-600); font-size: 12px; margin-left: 6px;">Default</span>{% endif %}
+        <p style="color: var(--text-600); font-size: 14px; margin: 6px 0 0;">
+          {{ address.address_line1 }}, {{ address.address_line2 }}<br>
+          {{ address.city }}, {{ address.state }} - {{ address.pincode }}<br>
+          Phone: {{ address.phone_number }}
+        </p>
+      </div>
+      <div style="display:flex; gap:10px; font-size:13px;">
+        <a href="{% url 'accounts:address_edit' address.pk %}">Edit</a>
+        <a href="{% url 'accounts:address_delete' address.pk %}" onclick="return confirm('Remove this address?')" style="color: var(--coral-500);">Delete</a>
+      </div>
+    </div>
+  {% empty %}
+    <p style="color: var(--text-600);">You haven't saved any addresses yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

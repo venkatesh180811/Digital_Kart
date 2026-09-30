@@ -1,0 +1,44 @@
+{% load static %}
+<div id="dk-chatbot-root" class="dk-chatbot-root">
+  <button id="dk-chatbot-toggle" class="dk-chatbot-toggle" aria-label="Open chat">
+    <i class="fa-solid fa-comments"></i>
+  </button>
+
+  <div id="dk-chatbot-window" class="dk-chatbot-window" aria-hidden="true">
+    <div class="dk-chatbot-header">
+      <div>
+        <div class="dk-chatbot-title"><i class="fa-solid fa-robot"></i> DigitalKart AI</div>
+        <div class="dk-chatbot-subtitle">Customer Support</div>
+      </div>
+      <button id="dk-chatbot-close" class="dk-chatbot-close" aria-label="Close chat">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="dk-chatbot-messages" class="dk-chatbot-messages">
+      <div class="dk-chatbot-message assistant">
+        <div class="dk-chatbot-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div class="dk-chatbot-bubble">
+          <div class="dk-chatbot-text">Hello! I'm DigitalKart AI. How can I help you today?</div>
+          <div class="dk-chatbot-time">Just now</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dk-chatbot-typing" class="dk-chatbot-typing" style="display:none;">
+      <div class="dk-chatbot-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="dk-chatbot-bubble">
+        <div class="dk-chatbot-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+    <div id="dk-chatbot-products" class="dk-chatbot-products"></div>
+
+    <div class="dk-chatbot-footer">
+      <form id="dk-chatbot-form" autocomplete="off">
+        <input id="dk-chatbot-input" type="text" placeholder="Type your message..." autocomplete="off">
+        <button type="submit" aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}My Orders — DigitalKart{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orders.css' %}">
+{% endblock %}
+{% block content %}
+<div class="orders-page">
+
+  <div class="orders-header">
+    <h1 class="orders-title"><i class="fa-solid fa-box"></i> My Orders</h1>
+    <p class="orders-subtitle">Track and manage all your purchases</p>
+  </div>
+
+  <form method="get" class="orders-toolbar-form">
+    <div class="orders-toolbar">
+      <div class="orders-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" placeholder="Search orders by product name or order ID" value="{{ query }}">
+      </div>
+      <div class="orders-filter">
+        <select name="status">
+          <option value="">All Orders</option>
+          {% for status, label in order_status_choices %}
+            <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="orders-sort">
+        <select name="sort">
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+          <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+          <option value="amount_high" {% if sort == 'amount_high' %}selected{% endif %}>Highest Amount</option>
+          <option value="amount_low" {% if sort == 'amount_low' %}selected{% endif %}>Lowest Amount</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" style="display:none;">Search</button>
+    </div>
+  </form>
+
+  <div class="orders-count">{{ order_count }} Order{{ order_count|pluralize }}</div>
+
+  {% if page_obj %}
+    {% for order in page_obj %}
+      <div class="order-card" data-order-id="{{ order.id }}">
+        <div class="order-card-header">
+          <div class="order-card-header-left">
+            <div class="order-card-number">#{{ order.order_number }}</div>
+            <div class="order-card-meta">
+              <span><i class="fa-solid fa-calendar"></i> Placed on {{ order.placed_at|date:"d M Y" }}</span>
+              <span><i class="fa-solid fa-bag-shopping"></i> {{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+            </div>
+          </div>
+          <div class="order-card-status">
+            <span class="status-badge status-{{ order.status }}">
+              <i class="fa-solid fa-{% if order.status == 'delivered' %}circle-check{% elif order.status == 'cancelled' %}circle-xmark{% elif order.status == 'returned' %}rotate-left{% elif order.status == 'refunded' %}money-bill{% else %}clock{% endif %}"></i>
+              {{ order.get_status_display }}
+            </span>
+          </div>
+        </div>
+
+        <div class="order-card-body">
+          <div class="order-items-preview">
+            {% for item in order.items.all|slice:":3" %}
+              <div class="order-item-row">
+                <div class="order-item-image">
+                  {% if item.product %}
+                    {% with item.product.images.first as img %}
+                      {% if img %}
+                        <img src="{{ img.image.url }}" alt="{{ item.product_name }}" loading="lazy">
+                      {% else %}
+                        <div class="order-item-placeholder"><i class="fa-solid fa-image"></i></div>
+                      {% endif %}
+                    {% endwith %}
+                  {% else %}
+                    <div class="order-item-placeholder"><i class="fa-solid fa-image"></i></div>
+                  {% endif %}
+                </div>
+                <div class="order-item-info">
+                  <div class="order-item-name">{{ item.product_name }}</div>
+                  <div class="order-item-meta">
+                    <span>Qty: {{ item.quantity }}</span>
+                    <span>₹{{ item.price|floatformat:0|intcomma }}</span>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+            {% if order.items.count > 3 %}
+              <div class="order-more-items">+ {{ order.items.count|add:"-3" }} more item{{ order.items.count|add:"-3"|pluralize }}</div>
+            {% endif %}
+          </div>
+
+          <div class="order-card-aside">
+            <div>
+              <div class="order-card-total-label">Total</div>
+              <div class="order-card-total-amount">₹{{ order.grand_total|floatformat:0|intcomma }}</div>
+            </div>
+            <div class="order-card-actions">
+              <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline">View Details</a>
+              {% if order.status in 'pending,confirmed,shipped' %}
+                <form method="post" action="{% url 'orders:buy_again' order.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-primary">Buy Again</button>
+                </form>
+              {% endif %}
+              {% if order.status in 'pending,confirmed' %}
+                <form method="post" action="{% url 'orders:order_cancel' order.id %}" style="display:inline;" onsubmit="return confirm('Cancel this order?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="order-expand-section">
+          <button class="order-expand-btn" type="button" aria-expanded="false" data-order-id="{{ order.id }}">
+            <i class="fa-solid fa-chevron-down"></i> View Products
+          </button>
+          <div class="order-expand-content" id="expand-content-{{ order.id }}">
+            <div class="order-expand-grid">
+              {% for item in order.items.all %}
+                <div class="expand-item-card">
+                  <div class="expand-item-image">
+                    {% if item.product %}
+                      {% with item.product.images.first as img %}
+                        {% if img %}
+                          <img src="{{ img.image.url }}" alt="{{ item.product_name }}" loading="lazy">
+                        {% else %}
+                          <div class="order-item-placeholder"><i class="fa-solid fa-image"></i></div>
+                        {% endif %}
+                      {% endwith %}
+                    {% else %}
+                      <div class="order-item-placeholder"><i class="fa-solid fa-image"></i></div>
+                    {% endif %}
+                  </div>
+                  <div class="expand-item-info">
+                    <div class="expand-item-name">{{ item.product_name }}</div>
+                    {% if item.product and item.product.brand %}
+                      <div class="expand-item-brand">{{ item.product.brand.name }}</div>
+                    {% endif %}
+                    <div class="expand-item-meta">
+                      <span>Qty: {{ item.quantity }}</span>
+                      <span>₹{{ item.price|floatformat:0|intcomma }}</span>
+                    </div>
+                    {% if item.product %}
+                      <a href="{{ item.product.get_absolute_url }}" class="btn btn-sm btn-outline" style="margin-top:8px;">View Product</a>
+                    {% else %}
+                      <span class="product-unavailable">Product currently unavailable</span>
+                    {% endif %}
+                  </div>
+                  <div class="expand-item-price">
+                    <div class="expand-item-total-label">Line Total</div>
+                    <div class="expand-item-total-amount">₹{{ item.line_total|floatformat:0|intcomma }}</div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="orders-pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">&laquo; Previous</a>
+        {% else %}
+          <span class="disabled">&laquo; Previous</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <span class="current">{{ num }}</span>
+          {% else %}
+            <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}">Next &raquo;</a>
+        {% else %}
+          <span class="disabled">Next &raquo;</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="orders-empty">
+      <i class="fa-solid fa-box-open"></i>
+      <h3>No Orders Yet</h3>
+      <p>Your purchases will appear here once you place an order.</p>
+      <a href="{% url 'products:product_list' %}" class="btn btn-primary">Start Shopping</a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+(function() {
+  var form = document.querySelector('.orders-toolbar-form');
+  if (!form) return;
+  var selects = form.querySelectorAll('select');
+  selects.forEach(function(select) {
+    select.addEventListener('change', function() {
+      form.submit();
+    });
+  });
+  var searchInput = form.querySelector('input[name="q"]');
+  if (searchInput) {
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        form.submit();
+      }
+    });
+  }
+
+  document.querySelectorAll('.order-expand-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var orderId = this.getAttribute('data-order-id');
+      var content = document.getElementById('expand-content-' + orderId);
+      var isExpanded = this.getAttribute('aria-expanded') === 'true';
+      this.setAttribute('aria-expanded', !isExpanded);
+      if (isExpanded) {
+        content.style.maxHeight = null;
+        content.style.opacity = '0';
+        content.style.marginTop = '0px';
+        this.innerHTML = '<i class="fa-solid fa-chevron-down"></i> View Products';
+      } else {
+        content.style.maxHeight = content.scrollHeight + 'px';
+        content.style.opacity = '1';
+        content.style.marginTop = '16px';
+        this.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Hide Products';
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

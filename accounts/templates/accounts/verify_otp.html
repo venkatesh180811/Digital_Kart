@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Verify OTP — DigitalKart{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h1 class="auth-title">Verify OTP</h1>
+        <p class="auth-subtitle">We sent a 6-digit code to <strong>{{ email }}</strong>.</p>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="auth-{{ message.tags }}">
+            <i class="fa-solid fa-{% if message.tags == 'error' %}circle-exclamation{% else %}circle-check{% endif %}"></i>
+            <div>{{ message }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" novalidate class="auth-form" id="otp-form">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="id_code">
+            <i class="fa-solid fa-hashtag"></i> Enter OTP
+          </label>
+          <div class="auth-input-wrap">
+            <input type="text" name="code" id="id_code" maxlength="6" class="form-input otp-input" placeholder="000000" required autofocus inputmode="numeric" pattern="\d{6}" autocomplete="one-time-code">
+            <i class="fa-solid fa-hashtag auth-input-icon"></i>
+          </div>
+          <p style="font-size: 12px; color: var(--text-400); margin-top: 6px;">Enter the 6-digit code from your email</p>
+        </div>
+
+        <button type="submit" class="auth-submit">
+          <i class="fa-solid fa-check-circle"></i> Verify &amp; Login
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p class="auth-footer-text">Didn't receive the code?</p>
+        <div class="auth-footer-link">
+          <a href="{% url 'accounts:request_otp' %}">Resend OTP</a>
+        </div>
+        <div class="auth-footer-link" style="margin-top: 8px;">
+          <a href="{% url 'accounts:login' %}">Back to password login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('otp-form');
+  const input = document.getElementById('id_code');
+  if (!form || !input) return;
+
+  input.addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+    if (this.value.length === 6) {
+      form.submit();
+    }
+  });
+})();
+</script>
+{% endblock %}

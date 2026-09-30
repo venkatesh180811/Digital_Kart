@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/slider.css' %}">
+<style>
+/* Home page specific overrides */
+.home-layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 24px;
+  align-items: start;
+}
+
+.home-main {
+  min-width: 0;
+}
+
+.home-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.category-sidebar-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+
+.category-sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-sidebar-header i {
+  color: var(--teal-500);
+}
+
+.category-sidebar-list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.category-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-900);
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.category-sidebar-link:hover {
+  background: rgba(0, 194, 168, 0.08);
+  color: var(--teal-500);
+  transform: translateX(4px);
+}
+
+.category-sidebar-link i {
+  width: 20px;
+  text-align: center;
+  color: var(--teal-500);
+  font-size: 16px;
+}
+
+.section-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 32px 0 20px;
+}
+
+.section-header h2 {
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-header h2 i {
+  color: var(--teal-500);
+  font-size: 18px;
+}
+
+.section-header a {
+  font-size: 13px;
+  color: var(--teal-500);
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.category-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 16px 8px;
+  text-align: center;
+  transition: var(--transition);
+  box-shadow: var(--glass-shadow);
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(18, 20, 43, 0.12);
+  border-color: var(--teal-500);
+}
+
+.category-card i {
+  font-size: 28px;
+  color: var(--teal-500);
+  margin-bottom: 8px;
+}
+
+.category-card span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-900);
+}
+
+@media (max-width: 1024px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .home-sidebar {
+    position: static;
+    order: -1;
+  }
+  
+  .category-sidebar-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-height: none;
+  }
+  
+  .category-sidebar-link {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero Slider -->
+<section class="dk-slider" id="heroSlider" aria-label="Promotional offers">
+  <div class="dk-slider__viewport">
+    <div class="dk-slide is-active" aria-hidden="false">
+      <img class="dk-slide__image" src="{% static 'images/banners/banner1.jpg' %}" alt="Mega Electronics Sale - Up to 70% OFF" loading="eager">
+      <div class="dk-slide__overlay">
+        <div class="dk-slide__content">
+          <span class="dk-slide__badge">Up to 70% OFF</span>
+          <h2 class="dk-slide__title">Mega Electronics Sale</h2>
+          <p class="dk-slide__subtitle">Top brands, unbeatable prices. Free delivery on orders above ₹499.</p>
+          <a href="{% url 'products:product_list' %}" class="dk-slide__cta">Shop Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dk-slide" aria-hidden="true">
+      <img class="dk-slide__image" src="{% static 'images/banners/banner2.jpg' %}" alt="Fashion Festival - Trending Styles for Everyone" loading="lazy">
+      <div class="dk-slide__overlay">
+        <div class="dk-slide__content">
+          <span class="dk-slide__badge">Trending Styles</span>
+          <h2 class="dk-slide__title">Fashion Festival</h2>
+          <p class="dk-slide__subtitle">Trending Styles for Everyone</p>
+          <a href="{% url 'products:product_list' %}?category=fashion" class="dk-slide__cta">Explore <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dk-slide" aria-hidden="true">
+      <img class="dk-slide__image" src="{% static 'images/banners/banner3.jpg' %}" alt="Latest Smartphones - Exchange Offers Available" loading="lazy">
+      <div class="dk-slide__overlay">
+        <div class="dk-slide__content">
+          <span class="dk-slide__badge">Exchange Offers</span>
+          <h2 class="dk-slide__title">Latest Smartphones</h2>
+          <p class="dk-slide__subtitle">Exchange Offers Available</p>
+          <a href="{% url 'products:product_list' %}?category=mobiles" class="dk-slide__cta">Buy Now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dk-slide" aria-hidden="true">
+      <img class="dk-slide__image" src="{% static 'images/banners/banner4.jpg' %}" alt="Home & Kitchen - Upgrade Your Home Today" loading="lazy">
+      <div class="dk-slide__overlay">
+        <div class="dk-slide__content">
+          <span class="dk-slide__badge">New Arrivals</span>
+          <h2 class="dk-slide__title">Home &amp; Kitchen</h2>
+          <p class="dk-slide__subtitle">Upgrade Your Home Today</p>
+          <a href="{% url 'products:product_list' %}?category=home-kitchen" class="dk-slide__cta">View Collection <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dk-slide" aria-hidden="true">
+      <img class="dk-slide__image" src="{% static 'images/banners/banner5.jpg' %}" alt="DigitalKart Specials - Best Deals Every Day" loading="lazy">
+      <div class="dk-slide__overlay">
+        <div class="dk-slide__content">
+          <span class="dk-slide__badge">Daily Deals</span>
+          <h2 class="dk-slide__title">DigitalKart Specials</h2>
+          <p class="dk-slide__subtitle">Best Deals Every Day</p>
+          <a href="{% url 'products:product_list' %}" class="dk-slide__cta">Shop Deals <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="dk-slider__arrow dk-slider__arrow--prev" aria-label="Previous slide">&#10094;</button>
+  <button class="dk-slider__arrow dk-slider__arrow--next" aria-label="Next slide">&#10095;</button>
+  <div class="dk-slider__dots" role="tablist" aria-label="Slide navigation"></div>
+</section>
+
+<div class="section-wrapper">
+  <div class="home-layout">
+    <div class="home-main">
+      {% if featured %}
+      <div class="section-header">
+        <h2><i class="fa-solid fa-star"></i> Featured Products</h2>
+        <a href="{% url 'products:product_list' %}">View All <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="home-grid">
+        {% for product in featured %}{% include "products/partials/home_product_card.html" %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if deals %}
+      <div class="section-header">
+        <h2><i class="fa-solid fa-bolt"></i> Flash Sale <span id="flash-timer" style="font-size:14px; color:var(--coral-500); margin-left:10px;">04:00:00</span></h2>
+        <a href="{% url 'products:product_list' %}">View All <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="home-grid">
+        {% for product in deals %}{% include "products/partials/home_product_card.html" %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if best_sellers %}
+      <div class="section-header">
+        <h2><i class="fa-solid fa-trophy"></i> Best Sellers</h2>
+        <a href="{% url 'products:product_list' %}">View All <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="home-grid">
+        {% for product in best_sellers %}{% include "products/partials/home_product_card.html" %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if new_arrivals %}
+      <div class="section-header">
+        <h2><i class="fa-solid fa-sparkles"></i> New Arrivals</h2>
+        <a href="{% url 'products:product_list' %}?sort=newest">View All <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="home-grid">
+        {% for product in new_arrivals %}{% include "products/partials/home_product_card.html" %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if recently_viewed %}
+      <div class="section-header">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Recently Viewed</h2>
+      </div>
+      <div class="home-grid">
+        {% for product in recently_viewed %}{% include "products/partials/home_product_card.html" %}{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if categories %}
+    <aside class="home-sidebar">
+      <div class="category-sidebar-card">
+        <div class="category-sidebar-header">
+          <i class="fa-solid fa-grid-2"></i>
+          Categories
+        </div>
+        <div class="category-sidebar-list">
+          {% for cat in categories %}
+            <a href="{% url 'categories:category_detail' cat.slug %}" class="category-sidebar-link">
+              {% if cat.icon %}<i class="{{ cat.icon }}"></i>{% endif %}
+              <span>{{ cat.name }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </aside>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

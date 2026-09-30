@@ -1,0 +1,80 @@
+<div class="filter-section">
+  <div class="filter-title">Category</div>
+  {% for cat in categories %}
+    <label class="filter-option">
+      <input type="radio" name="category" value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}checked{% endif %}>
+      {{ cat.name }}
+    </label>
+  {% endfor %}
+</div>
+
+<div class="filter-section">
+  <div class="filter-title">Brand</div>
+  {% for brand in brands %}
+    <label class="filter-option">
+      <input type="radio" name="brand" value="{{ brand.slug }}" {% if request.GET.brand == brand.slug %}checked{% endif %}>
+      {{ brand.name }}
+    </label>
+  {% endfor %}
+</div>
+
+<div class="filter-section">
+  <div class="filter-title">Price Range</div>
+  <div class="filter-price-inputs">
+    <input type="number" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}" min="0">
+    <span>–</span>
+    <input type="number" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}" min="0">
+  </div>
+  <div class="filter-presets">
+    <a href="?{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}&max_price=1000" class="filter-preset-btn">Under ₹1,000</a>
+    <a href="?{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}&min_price=1000&max_price=5000" class="filter-preset-btn">₹1k–₹5k</a>
+    <a href="?{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}&min_price=5000&max_price=10000" class="filter-preset-btn">₹5k–₹10k</a>
+    <a href="?{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}&min_price=10000&max_price=25000" class="filter-preset-btn">₹10k–₹25k</a>
+    <a href="?{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}&min_price=25000&max_price=50000" class="filter-preset-btn">₹25k–₹50k</a>
+    <a href="?{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.brand %}&brand={{ request.GET.brand }}{% endif %}&min_price=50000" class="filter-preset-btn">₹50k+</a>
+  </div>
+</div>
+
+<div class="filter-section">
+  <div class="filter-title">Rating</div>
+  <label class="filter-option">
+    <input type="radio" name="rating" value="4" {% if request.GET.rating == '4' %}checked{% endif %}>
+    4★ & above
+  </label>
+  <label class="filter-option">
+    <input type="radio" name="rating" value="3" {% if request.GET.rating == '3' %}checked{% endif %}>
+    3★ & above
+  </label>
+  <label class="filter-option">
+    <input type="radio" name="rating" value="2" {% if request.GET.rating == '2' %}checked{% endif %}>
+    2★ & above
+  </label>
+</div>
+
+<div class="filter-section">
+  <div class="filter-title">Availability</div>
+  <label class="filter-option">
+    <input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock == '1' %}checked{% endif %}>
+    In Stock Only
+  </label>
+</div>
+
+<div class="filter-section">
+  <div class="filter-title">Discount</div>
+  <label class="filter-option">
+    <input type="radio" name="discount" value="10" {% if request.GET.discount == '10' %}checked{% endif %}>
+    10% & above
+  </label>
+  <label class="filter-option">
+    <input type="radio" name="discount" value="20" {% if request.GET.discount == '20' %}checked{% endif %}>
+    20% & above
+  </label>
+  <label class="filter-option">
+    <input type="radio" name="discount" value="30" {% if request.GET.discount == '30' %}checked{% endif %}>
+    30% & above
+  </label>
+  <label class="filter-option">
+    <input type="radio" name="discount" value="50" {% if request.GET.discount == '50' %}checked{% endif %}>
+    50% & above
+  </label>
+</div>

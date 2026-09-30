@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Payment — Order {{ order.order_number }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orders.css' %}">
+{% endblock %}
+{% block content %}
+<div class="order-detail-page">
+  <div class="order-detail-header">
+    <div>
+      <h1 class="order-detail-title"><i class="fa-solid fa-lock"></i> Payment</h1>
+      <p class="order-detail-meta">Order #{{ order.order_number }} — ₹{{ order.grand_total|floatformat:0|intcomma }}</p>
+    </div>
+    <div class="order-detail-actions">
+      <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i> Back to Order
+      </a>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-bag-shopping"></i> Order Summary
+    </div>
+    <div class="detail-section-body">
+      {% for item in order.items.all %}
+        <div class="detail-item">
+          <div>
+            <div class="detail-item-name">{{ item.product_name }}</div>
+            <div class="detail-item-meta">Qty: {{ item.quantity }} × ₹{{ item.price|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="detail-item-price">₹{{ item.line_total|floatformat:0|intcomma }}</div>
+        </div>
+      {% endfor %}
+      <table class="price-table">
+        <tr>
+          <td>Subtotal</td>
+          <td>₹{{ order.subtotal|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr class="discount">
+          <td>Discount</td>
+          <td>-₹{{ order.discount_amount|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Delivery</td>
+          <td>{% if order.shipping_charge %}₹{{ order.shipping_charge|floatformat:0|intcomma }}{% else %}FREE{% endif %}</td>
+        </tr>
+        <tr>
+          <td>GST</td>
+          <td>₹{{ order.gst_amount|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <td>Total</td>
+          <td>₹{{ order.grand_total|floatformat:0|intcomma }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-credit-card"></i> Payment Method — {{ order.get_payment_method_display }}
+    </div>
+    <div class="detail-section-body">
+      {% if simulation_mode %}
+        <p style="color: var(--text-600); font-size: 14px; margin-top: 0;">
+          Sandbox mode: no real charge will be made. Use the buttons below to simulate gateway callbacks.
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+          <a href="{% url 'payments:payment_success' order.id %}" class="btn btn-primary">
+            <i class="fa-solid fa-circle-check"></i> Simulate Successful Payment
+          </a>
+          <a href="{% url 'payments:payment_failure' order.id %}" class="btn btn-outline">
+            <i class="fa-solid fa-circle-xmark"></i> Simulate Failed Payment
+          </a>
+        </div>
+      {% elif gateway == 'razorpay' and rzp_order %}
+        <div id="razorpay_button_wrapper" style="margin-top: 12px;">
+          <button id="rzp-button" class="btn btn-primary" style="min-width: 220px;">
+            <i class="fa-solid fa-lock"></i> Pay ₹{{ order.grand_total|floatformat:0|intcomma }}
+          </button>
+          <p style="font-size: 12px; color: var(--text-400); margin-top: 10px;">
+            You will see a secure Razorpay checkout popup to complete payment.
+          </p>
+        </div>
+        {% if razorpay_key %}
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+          (function() {
+            var options = {
+              key: "{{ razorpay_key }}",
+              amount: {{ amount_paise }},
+              currency: "INR",
+              name: "DigitalKart",
+              description: "Order {{ order.order_number }}",
+              order_id: "{{ rzp_order.id }}",
+              prefill: {
+                name: "{{ order.address.full_name }}",
+                contact: "{{ order.address.phone_number }}"
+              },
+              notes: {
+                address: "{{ order.address.address_line1 }}"
+              },
+              theme: {
+                color: "#00C2A8"
+              },
+              handler: function(response) {
+                var form = document.createElement("form");
+                form.method = "POST";
+                form.action = "{% url 'payments:razorpay_callback' order.id %}";
+                form.style.display = "none";
+                var csrf = document.querySelector("[name=csrfmiddlewaretoken]");
+                if (csrf) {
+                  var input = document.createElement("input");
+                  input.type = "hidden";
+                  input.name = "csrfmiddlewaretoken";
+                  input.value = csrf.value;
+                  form.appendChild(input);
+                }
+                var paymentId = document.createElement("input");
+                paymentId.type = "hidden";
+                paymentId.name = "payment_id";
+                paymentId.value = response.razorpay_payment_id;
+                form.appendChild(paymentId);
+                var orderId = document.createElement("input");
+                orderId.type = "hidden";
+                orderId.name = "order_id";
+                orderId.value = response.razorpay_order_id;
+                form.appendChild(orderId);
+                var signature = document.createElement("input");
+                signature.type = "hidden";
+                signature.name = "signature";
+                signature.value = response.razorpay_signature || "";
+                form.appendChild(signature);
+                document.body.appendChild(form);
+                form.submit();
+              }
+            };
+            var rzp = new Razorpay(options);
+            document.getElementById("rzp-button").onclick = function(e) {
+              e.preventDefault();
+              rzp.open();
+            };
+          })();
+        </script>
+        {% endif %}
+      {% elif gateway == 'stripe' and stripe_session_url %}
+        <a href="{{ stripe_session_url }}" class="btn btn-primary" style="min-width: 220px;">
+          <i class="fa-solid fa-lock"></i> Pay ₹{{ order.grand_total|floatformat:0|intcomma }} with Stripe
+        </a>
+        <p style="font-size: 12px; color: var(--text-400); margin-top: 10px;">
+          You will be redirected to Stripe secure checkout.
+        </p>
+      {% else %}
+        <p style="color: var(--text-600); font-size: 14px;">
+          Payment gateway is not configured. Please choose Cash on Delivery or contact support.
+        </p>
+        <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline" style="margin-top: 12px;">
+          Back to Order
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

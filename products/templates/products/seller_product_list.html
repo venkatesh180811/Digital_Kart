@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding:30px 20px;">
+  <div class="section-title"><h2>My Products</h2></div>
+  <table style="width:100%; border-collapse:collapse; font-size:14px;">
+    <tr style="text-align:left; border-bottom:2px solid var(--border);"><th style="padding:8px;">Name</th><th>Price</th><th>Stock</th><th>Status</th></tr>
+    {% for product in products %}
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px;">{{ product.name }}</td><td>₹{{ product.price }}</td><td>{{ product.stock }}</td>
+      <td>{% if product.is_active %}Active{% else %}Inactive{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

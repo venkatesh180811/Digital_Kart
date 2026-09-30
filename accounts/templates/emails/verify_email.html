@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify your DigitalKart account</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f6f8;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          <tr>
+            <td style="background:linear-gradient(135deg, #00C2A8, #00A891); padding:32px 40px; text-align:center;">
+              <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:700;">DigitalKart</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 40px;">
+              <h2 style="margin:0 0 16px; color:#1A1C2C; font-size:20px;">Verify your email address</h2>
+              <p style="margin:0 0 24px; color:#5B5F76; font-size:15px; line-height:1.6;">Hi {{ user.username }},</p>
+              <p style="margin:0 0 24px; color:#5B5F76; font-size:15px; line-height:1.6;">Thank you for creating a DigitalKart account. Please verify your email by clicking the button below:</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 32px;">
+                <tr>
+                  <td style="background:#00C2A8; border-radius:6px; text-align:center;">
+                    <a href="{{ verify_url }}" style="display:inline-block; padding:14px 32px; color:#ffffff; text-decoration:none; font-weight:600; font-size:15px;">Verify Email</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 8px; color:#5B5F76; font-size:14px; line-height:1.6;">If the button doesn't work, copy and paste this link into your browser:</p>
+              <p style="margin:0 0 24px; color:#00C2A8; font-size:14px; word-break:break-all;">{{ verify_url }}</p>
+              <p style="margin:0; color:#5B5F76; font-size:14px; line-height:1.6;">This link expires in 24 hours.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px; border-top:1px solid #E5E7F0; text-align:center;">
+              <p style="margin:0; color:#9093A6; font-size:13px;">DigitalKart &middot; Shop Smart, Live Better</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

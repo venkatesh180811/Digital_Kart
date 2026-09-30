@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding:30px 20px; max-width:640px;">
+  <div class="section-title"><h2>Notifications</h2></div>
+  {% for n in notifications %}
+    <div class="card" style="padding:16px 20px; margin-bottom:10px;">
+      <strong>{{ n.title }}</strong>
+      <p style="font-size:13px; color:var(--text-600); margin:6px 0 0;">{{ n.message }}</p>
+      <span style="font-size:11px; color:var(--text-400);">{{ n.created_at|timesince }} ago</span>
+    </div>
+  {% empty %}
+    <p style="color:var(--text-600);">No notifications yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

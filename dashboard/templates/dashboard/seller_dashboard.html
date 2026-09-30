@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding:30px 20px;">
+  <div class="section-title"><h2>Seller Dashboard</h2><a href="{% url 'products:seller_product_list' %}">Manage Products</a></div>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; margin-bottom:30px;">
+    <div class="card" style="padding:18px;"><div style="font-size:12px; color:var(--text-600);">Total Sales</div><div style="font-size:24px; font-weight:700;">₹{{ total_sales }}</div></div>
+    <div class="card" style="padding:18px;"><div style="font-size:12px; color:var(--text-600);">Orders</div><div style="font-size:24px; font-weight:700;">{{ total_orders }}</div></div>
+    <div class="card" style="padding:18px;"><div style="font-size:12px; color:var(--text-600);">Products Listed</div><div style="font-size:24px; font-weight:700;">{{ products.count }}</div></div>
+    <div class="card" style="padding:18px;"><div style="font-size:12px; color:var(--text-600);">Out of Stock</div><div style="font-size:24px; font-weight:700; color:var(--coral-500);">{{ out_of_stock.count }}</div></div>
+  </div>
+  {% if low_stock %}
+  <div class="card" style="padding:18px; border-left:4px solid var(--amber-500);">
+    <strong>Low Stock Alert</strong>
+    <ul style="margin:8px 0 0; padding-left:18px; font-size:13px;">
+      {% for p in low_stock %}<li>{{ p.name }} — {{ p.stock }} left</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

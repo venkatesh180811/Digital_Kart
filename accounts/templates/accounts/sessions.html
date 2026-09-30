@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Active Sessions — DigitalKart{% endblock %}
+{% block content %}
+<div class="profile-page">
+  <div class="card" style="max-width: 720px; margin: 0 auto;">
+    <div class="card-header">
+      <h2><i class="fa-solid fa-laptop"></i> Active Sessions</h2>
+      <a href="{% url 'accounts:profile' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i> Back to Profile
+      </a>
+    </div>
+    <div class="card-body">
+      <p style="color: var(--text-600); font-size: 14px; margin-bottom: 20px;">
+        Manage your logged-in devices. If you see any suspicious activity, log out that session immediately.
+      </p>
+
+      {% if sessions %}
+        <div class="sessions-list">
+          {% for session in sessions %}
+            <div class="session-item {% if session.session_key == current_session_key %}session-current{% endif %}">
+              <div class="session-icon">
+                <i class="fa-solid fa-{% if session.session_key == current_session_key %}mobile-screen{% else %}desktop{% endif %}"></i>
+              </div>
+              <div class="session-info">
+                <div class="session-device">
+                  {% if session.session_key == current_session_key %}
+                    <span class="badge badge-current">Current</span>
+                  {% endif %}
+                  {{ session.user_agent|truncatechars:60|default:"Unknown device" }}
+                </div>
+                <div class="session-meta">
+                  <span><i class="fa-solid fa-globe"></i> {{ session.ip_address|default:"Unknown IP" }}</span>
+                  <span><i class="fa-solid fa-clock"></i> {{ session.last_activity|date:"M d, Y H:i" }}</span>
+                </div>
+              </div>
+              <div class="session-actions">
+                {% if session.session_key != current_session_key %}
+                  <form method="post" action="{% url 'accounts:logout_session' session.session_key %}" style="display:inline;" onsubmit="return confirm('Log out this session?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Log out</button>
+                  </form>
+                {% else %}
+                  <span class="session-current-text">Active now</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if sessions.count > 1 %}
+          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <form method="post" action="{% url 'accounts:logout_all_sessions' %}" onsubmit="return confirm('Log out all other sessions? This will sign you out from all other devices.')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">
+                <i class="fa-solid fa-right-from-bracket"></i> Log out all other sessions
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <i class="fa-solid fa-laptop"></i>
+          <p>No active sessions found</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: var(--profile-radius-sm);
+  margin-bottom: 12px;
+  transition: var(--profile-transition);
+}
+
+.session-item:last-child {
+  margin-bottom: 0;
+}
+
+.session-current {
+  border: 2px solid var(--teal-500);
+  background: rgba(0, 194, 168, 0.04);
+}
+
+.session-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 194, 168, 0.1);
+  color: var(--teal-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.session-current .session-icon {
+  background: rgba(0, 194, 168, 0.15);
+  color: var(--teal-600);
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-device {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-900);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.session-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-600);
+}
+
+.session-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-meta i {
+  font-size: 11px;
+  color: var(--text-400);
+}
+
+.session-actions {
+  flex-shrink: 0;
+}
+
+.session-current-text {
+  font-size: 12px;
+  color: var(--teal-500);
+  font-weight: 600;
+  background: rgba(0, 194, 168, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.badge-current {
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+  color: white;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+  .session-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .session-actions {
+    width: 100%;
+  }
+
+  .session-actions .btn {
+    width: 100%;
+  }
+}
+</style>
+{% endblock %}

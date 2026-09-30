@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding:40px 20px; max-width:500px;">
+  <div class="card" style="padding:32px;">
+    <h1 style="font-size:20px; margin-bottom:6px;">Become a DigitalKart Seller</h1>
+    <p style="color:var(--text-600); font-size:14px; margin-bottom:20px;">Reach millions of shoppers. Tell us about your business.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group"><label>{{ field.label }}</label>{{ field }}</div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-block">Register as Seller</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% load static %}
+<div class="product-card">
+  <a href="{{ product.get_absolute_url }}" class="product-card-image">
+    {% with product.images.first as img %}
+      {% if img %}
+        <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+      {% else %}
+        <div class="product-card-placeholder">
+          <i class="fa-solid fa-image"></i>
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% if product.discount_percent > 0 %}
+      <span class="product-badge">{{ product.discount_percent }}% OFF</span>
+    {% endif %}
+    {% if not product.in_stock %}
+      <div class="product-out-of-stock">Out of stock</div>
+    {% endif %}
+  </a>
+  <div class="product-card-body">
+    <a href="{{ product.get_absolute_url }}" class="product-name-link">
+      <h3 class="product-name">{{ product.name }}</h3>
+    </a>
+    {% if product.brand %}
+      <div class="product-brand">{{ product.brand.name }}</div>
+    {% endif %}
+    {% if product.specifications %}
+      <div class="product-specs">
+        {% for key, value in product.specifications.items|slice:":3" %}
+          <div class="spec-item">
+            <span class="spec-key">{{ key }}:</span> <span class="spec-value">{{ value }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="product-rating">
+      <i class="fa-solid fa-star"></i>
+      <span>{{ product.average_rating|default:"New" }}</span>
+      {% if product.review_count %}
+        <span class="review-count">({{ product.review_count }})</span>
+      {% endif %}
+    </div>
+    <div class="product-price-row">
+      <span class="product-price">₹{{ product.price }}</span>
+      {% if product.mrp > product.price %}
+        <span class="product-mrp">₹{{ product.mrp }}</span>
+      {% endif %}
+    </div>
+    <div class="product-actions">
+      <form method="post" action="{% url 'cart:cart_add' product.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-primary" title="Add to Cart">
+          <i class="fa-solid fa-cart-plus"></i>
+        </button>
+      </form>
+      <button type="button" class="btn btn-sm btn-outline" data-wishlist-url="{% url 'wishlist:wishlist_add' product.id %}" data-in-wishlist="false" title="Add to Wishlist">
+        <i class="fa-regular fa-heart wishlist-icon"></i>
+      </button>
+    </div>
+  </div>
+</div>

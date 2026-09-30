@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Order {{ order.order_number }} — DigitalKart{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orders.css' %}">
+{% endblock %}
+{% block content %}
+<div class="order-detail-page">
+
+  <div class="order-detail-header">
+    <div>
+      <h1 class="order-detail-title"><i class="fa-solid fa-receipt"></i> Order #{{ order.order_number }}</h1>
+      <p class="order-detail-meta">Placed on {{ order.placed_at|date:"d M Y, h:i A" }}</p>
+    </div>
+    <div class="order-detail-actions">
+      <a href="{% url 'orders:order_list' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i> Back to Orders
+      </a>
+      {% if order.status in 'pending,confirmed,shipped' %}
+        <form method="post" action="{% url 'orders:buy_again' order.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary btn-sm">Buy Again</button>
+        </form>
+      {% endif %}
+      {% if order.status in 'pending,confirmed' %}
+        <form method="post" action="{% url 'orders:order_cancel' order.id %}" style="display:inline;" onsubmit="return confirm('Cancel this order?')">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm">Cancel Order</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-circle-info"></i> Order Summary
+    </div>
+    <div class="detail-section-body">
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Order Number</div>
+          <div class="summary-value">#{{ order.order_number }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Placed On</div>
+          <div class="summary-value">{{ order.placed_at|date:"d M Y, h:i A" }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Payment Method</div>
+          <div class="summary-value">{{ order.get_payment_method_display }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Payment Status</div>
+          <div class="summary-value">
+            {% if order.is_paid %}
+              <span class="status-badge status-delivered"><i class="fa-solid fa-circle-check"></i> Paid</span>
+            {% else %}
+              <span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Order Status</div>
+          <div class="summary-value">
+            <span class="status-badge status-{{ order.status }}">
+              <i class="fa-solid fa-{% if order.status == 'delivered' %}circle-check{% elif order.status == 'cancelled' %}circle-xmark{% elif order.status == 'returned' %}rotate-left{% elif order.status == 'refunded' %}money-bill{% else %}clock{% endif %}"></i>
+              {{ order.get_status_display }}
+            </span>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Amount</div>
+          <div class="summary-value summary-amount">₹{{ order.grand_total|floatformat:0|intcomma }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if order.status != 'cancelled' and order.status != 'refunded' %}
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-truck-fast"></i> Order Tracking
+    </div>
+    <div class="detail-section-body">
+      <div class="tracking-timeline">
+        {% for hist in order.history.all %}
+          {% if forloop.first %}
+            <div class="tracking-step done">
+              <div class="tracking-dot"><i class="fa-solid fa-check"></i></div>
+              <div class="tracking-label">{{ hist.status|title }}</div>
+              <div class="tracking-time">{{ hist.changed_at|date:"d M, h:i A" }}</div>
+            </div>
+          {% else %}
+            <div class="tracking-step {% if hist.status == order.status %}active{% endif %}">
+              <div class="tracking-dot">
+                {% if hist.status == order.status %}
+                  <i class="fa-solid fa-circle"></i>
+                {% else %}
+                  <i class="fa-solid fa-check"></i>
+                {% endif %}
+              </div>
+              <div class="tracking-label">{{ hist.status|title }}</div>
+              <div class="tracking-time">{{ hist.changed_at|date:"d M, h:i A" }}</div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-bag-shopping"></i> Products Ordered
+    </div>
+    <div class="detail-section-body">
+      {% for item in order.items.all %}
+        <div class="product-card-detail">
+          <div class="product-card-detail-image">
+            {% if item.product %}
+              {% with item.product.images.first as img %}
+                {% if img %}
+                  <img src="{{ img.image.url }}" alt="{{ item.product_name }}" loading="lazy">
+                {% else %}
+                  <div class="order-item-placeholder"><i class="fa-solid fa-image"></i></div>
+                {% endif %}
+              {% endwith %}
+            {% else %}
+              <div class="order-item-placeholder"><i class="fa-solid fa-image"></i></div>
+            {% endif %}
+          </div>
+          <div class="product-card-detail-info">
+            <div class="product-card-detail-name">
+              {% if item.product %}
+                <a href="{{ item.product.get_absolute_url }}">{{ item.product_name }}</a>
+              {% else %}
+                {{ item.product_name }}
+              {% endif %}
+            </div>
+            {% if item.product and item.product.brand %}
+              <div class="product-card-detail-brand">{{ item.product.brand.name }}</div>
+            {% endif %}
+            {% if item.product and item.product.specifications %}
+              <div class="product-card-detail-specs">
+                {% for key, value in item.product.specifications.items|slice:":4" %}
+                  <span class="spec-tag">{{ key }}: {{ value }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="product-card-detail-meta">
+              <span>Qty: {{ item.quantity }}</span>
+              <span>Price: ₹{{ item.price|floatformat:0|intcomma }}</span>
+            </div>
+            {% if item.product %}
+              <a href="{{ item.product.get_absolute_url }}" class="btn btn-sm btn-outline" style="margin-top:8px;">View Product</a>
+            {% else %}
+              <span class="product-unavailable">Product currently unavailable</span>
+            {% endif %}
+          </div>
+          <div class="product-card-detail-price">
+            <div class="product-card-detail-total">₹{{ item.line_total|floatformat:0|intcomma }}</div>
+            {% if item.quantity > 1 %}
+              <div class="product-card-detail-unit">₹{{ item.price|floatformat:0|intcomma }} each</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-location-dot"></i> Delivery Address
+    </div>
+    <div class="detail-section-body">
+      <div class="address-block">
+        <strong>{{ order.address.full_name }}</strong><br>
+        {{ order.address.address_line1 }}<br>
+        {% if order.address.address_line2 %}{{ order.address.address_line2 }}<br>{% endif %}
+        {{ order.address.city }}, {{ order.address.state }} — {{ order.address.pincode }}<br>
+        <strong>Phone:</strong> {{ order.address.phone_number }}
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-credit-card"></i> Payment Information
+    </div>
+    <div class="detail-section-body">
+      <div class="detail-item">
+        <div class="detail-item-name">Payment Method</div>
+        <div class="detail-item-price">{{ order.get_payment_method_display }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-item-name">Payment Status</div>
+        <div class="detail-item-price">
+          {% if order.is_paid %}
+            <span class="status-badge status-delivered"><i class="fa-solid fa-circle-check"></i> Paid</span>
+          {% else %}
+            <span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <i class="fa-solid fa-file-invoice"></i> Price Details
+    </div>
+    <div class="detail-section-body">
+      <table class="price-table">
+        <tr>
+          <td>Item Total</td>
+          <td>₹{{ order.subtotal|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr class="discount">
+          <td>Discount</td>
+          <td>-₹{{ order.discount_amount|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Delivery</td>
+          <td>{% if order.shipping_charge %}₹{{ order.shipping_charge|floatformat:0|intcomma }}{% else %}FREE{% endif %}</td>
+        </tr>
+        <tr>
+          <td>GST</td>
+          <td>₹{{ order.gst_amount|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <td>Total</td>
+          <td>₹{{ order.grand_total|floatformat:0|intcomma }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

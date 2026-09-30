@@ -1,0 +1,877 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ product.name }} — DigitalKart{% endblock %}
+{% block content %}
+<div class="container" style="padding: 40px 20px;">
+  <div class="luxury-card">
+    
+    <!-- Hero Section: Image + Details -->
+    <div class="luxury-hero">
+      <div class="luxury-gallery">
+        <div class="hero-image-wrap">
+          {% with product.images.first as img %}
+            {% if img %}
+              <img src="{{ img.image.url }}" alt="{{ product.name }}" id="mainImage" class="hero-image">
+            {% else %}
+              <div class="hero-placeholder">
+                <i class="fa-solid fa-image"></i>
+                <span>No image available</span>
+              </div>
+            {% endif %}
+          {% endwith %}
+          {% if product.discount_percent > 0 %}
+            <span class="luxury-badge">{{ product.discount_percent }}% OFF</span>
+          {% endif %}
+        </div>
+        {% if product.images.all|length > 1 %}
+        <div class="hero-thumbnails">
+          {% for img in product.images.all %}
+            <div class="hero-thumb" onclick="document.getElementById('mainImage').src='{{ img.image.url }}'">
+              <img src="{{ img.image.url }}" alt="{{ product.name }}">
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="luxury-info">
+        <nav class="luxury-breadcrumb">
+          <a href="{% url 'home' %}">Home</a>
+          <i class="fa-solid fa-chevron-right"></i>
+          <a href="{% url 'products:product_list' %}">Products</a>
+          <i class="fa-solid fa-chevron-right"></i>
+          <span>{{ product.name|truncatechars:35 }}</span>
+        </nav>
+
+        <h1 class="luxury-title">{{ product.name }}</h1>
+
+        <div class="luxury-rating">
+          <div class="luxury-stars">
+            {% for i in "12345"|make_list %}
+              <i class="fa-solid fa-star {% if i|add:0 <= product.average_rating %}active{% endif %}"></i>
+            {% endfor %}
+          </div>
+          <span class="luxury-rating-text">{{ product.average_rating|default:"New" }}</span>
+          {% if product.review_count %}
+            <span class="luxury-review-count">({{ product.review_count }} reviews)</span>
+          {% endif %}
+          <span class="luxury-brand">
+            <i class="fa-solid fa-tag"></i> {{ product.brand|default:"Unbranded" }}
+          </span>
+        </div>
+
+        <div class="luxury-price-block">
+          <div>
+            <span class="luxury-price">₹{{ product.price }}</span>
+            {% if product.mrp > product.price %}
+              <span class="luxury-mrp">₹{{ product.mrp }}</span>
+              <span class="luxury-discount">{{ product.discount_percent }}% OFF</span>
+            {% endif %}
+          </div>
+          <div class="luxury-stock {% if product.in_stock %}in{% else %}out{% endif %}">
+            <i class="fa-solid fa-circle-{% if product.in_stock %}check{% else %}xmark{% endif %}"></i>
+            {% if product.in_stock %}
+              In Stock{% if product.is_low_stock %} — Only {{ product.stock }} left!{% endif %}
+            {% else %}
+              Out of Stock
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="luxury-actions">
+          <form method="post" action="{% url 'cart:cart_add' product.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="luxury-btn luxury-btn-primary" {% if not product.in_stock %}disabled{% endif %}>
+              <i class="fa-solid fa-cart-plus"></i> Add to Cart
+            </button>
+          </form>
+          <form method="post" action="{% url 'cart:buy_now' product.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="luxury-btn luxury-btn-accent" {% if not product.in_stock %}disabled{% endif %}>
+              <i class="fa-solid fa-bolt"></i> Buy Now
+            </button>
+          </form>
+          <form method="post" action="{% url 'wishlist:wishlist_add' product.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="button" class="luxury-btn luxury-btn-ghost wishlist-toggle" data-wishlist-url="{% url 'wishlist:wishlist_add' product.id %}" data-in-wishlist="false">
+              <i class="fa-regular fa-heart wishlist-icon"></i> Wishlist
+            </button>
+          </form>
+        </div>
+
+        <div class="luxury-description">
+          <h3><i class="fa-solid fa-circle-info"></i> Description</h3>
+          <p>{{ product.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Specifications -->
+    {% if product.specifications %}
+    <div class="luxury-section">
+      <h3 class="luxury-section-title"><i class="fa-solid fa-microchip"></i> Product Specifications</h3>
+      <div class="luxury-specs">
+        {% for key, value in product.specifications.items %}
+          <div class="luxury-spec">
+            <span class="luxury-spec-key">{{ key }}</span>
+            <span class="luxury-spec-value">{{ value }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Reviews -->
+    <div class="luxury-section">
+      <h3 class="luxury-section-title"><i class="fa-solid fa-star"></i> Customer Reviews</h3>
+      {% if product.reviews.all %}
+        <div class="luxury-reviews">
+          {% for review in product.reviews.all|slice:":8" %}
+            <div class="luxury-review">
+              <div class="luxury-review-header">
+                <div class="luxury-reviewer">
+                  <div class="luxury-avatar">{{ review.user.username|first|upper }}</div>
+                  <div>
+                    <div class="luxury-reviewer-name">{{ review.user.username }}</div>
+                    <div class="luxury-review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                  </div>
+                </div>
+                <div class="luxury-review-rating">
+                  {% for i in "12345"|make_list %}
+                    <i class="fa-solid fa-star {% if i|add:0 <= review.rating %}active{% endif %}"></i>
+                  {% endfor %}
+                </div>
+              </div>
+              {% if review.title %}
+                <div class="luxury-review-title">{{ review.title }}</div>
+              {% endif %}
+              {% if review.comment %}
+                <p class="luxury-review-text">{{ review.comment }}</p>
+              {% endif %}
+              {% if user == review.user %}
+              <form method="post" action="{% url 'reviews:delete_review' review.id %}" style="display:inline; margin-top:8px;" onsubmit="return confirm('Delete this review?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--coral-500); border-color: var(--coral-500);">
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="luxury-empty">
+          <i class="fa-regular fa-comment-dots"></i>
+          <p>No reviews yet. Be the first to review this product.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="luxury-section">
+      <h3 class="luxury-section-title"><i class="fa-solid fa-pen-to-square"></i> Write a Review</h3>
+      <form method="post" action="{% url 'reviews:add_review' product.id %}" class="luxury-review-form">
+        {% csrf_token %}
+        <div class="luxury-form-group">
+          <label class="luxury-form-label">Rating</label>
+          <select name="rating" class="form-select" required>
+            <option value="">Select rating</option>
+            {% for i in "12345"|make_list %}
+              <option value="{{ i }}">{{ i }} Star{{ i|add:0|pluralize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="luxury-form-group">
+          <label class="luxury-form-label">Title</label>
+          <input type="text" name="title" class="form-input" placeholder="Summarize your review" maxlength="150">
+        </div>
+        <div class="luxury-form-group">
+          <label class="luxury-form-label">Review</label>
+          <textarea name="comment" class="form-input" rows="4" placeholder="Share your experience with this product"></textarea>
+        </div>
+        <button type="submit" class="luxury-btn luxury-btn-primary">
+          <i class="fa-solid fa-paper-plane"></i> Submit Review
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="luxury-section">
+      <div class="luxury-empty">
+        <i class="fa-regular fa-user"></i>
+        <p><a href="{% url 'accounts:login' %}" class="luxury-link">Login</a> to write a review for this product.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Related Products -->
+    {% if related %}
+    <div class="luxury-section luxury-section--last">
+      <h3 class="luxury-section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> You May Also Like</h3>
+      <div class="luxury-related">
+        {% for r in related %}
+        <a href="{{ r.get_absolute_url }}" class="luxury-related-card">
+          <div class="luxury-related-img">
+            {% with r.images.first as img %}
+              {% if img %}
+                <img src="{{ img.image.url }}" alt="{{ r.name }}" loading="lazy">
+              {% else %}
+                <div class="hero-placeholder"><i class="fa-solid fa-image"></i></div>
+              {% endif %}
+            {% endwith %}
+            {% if r.discount_percent > 0 %}
+              <span class="luxury-badge">{{ r.discount_percent }}% OFF</span>
+            {% endif %}
+          </div>
+          <div class="luxury-related-body">
+            <div class="luxury-related-name">{{ r.name|truncatechars:40 }}</div>
+            <div class="luxury-related-price">₹{{ r.price }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  /* =========================================================
+     Luxury Product Detail — Glassmorphism + Apple/Tesla/ Nothing
+     ========================================================= */
+  .luxury-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+
+  .luxury-card:hover {
+    box-shadow: 0 12px 48px rgba(18, 20, 43, 0.12);
+  }
+
+  /* Hero */
+  .luxury-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .luxury-gallery {
+    position: sticky;
+    top: 100px;
+  }
+
+  .hero-image-wrap {
+    position: relative;
+    background: var(--bg);
+    border-radius: var(--radius-lg) 0 0 0;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .hero-image {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hero-image-wrap:hover .hero-image {
+    transform: scale(1.04);
+  }
+
+  .hero-placeholder {
+    text-align: center;
+    color: var(--text-400);
+  }
+
+  .hero-placeholder i {
+    font-size: 64px;
+    opacity: 0.4;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .hero-placeholder span {
+    font-size: 14px;
+  }
+
+  .hero-thumbnails {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .hero-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+
+  .hero-thumb:hover, .hero-thumb.active {
+    border-color: var(--teal-500);
+    transform: translateY(-2px);
+  }
+
+  .hero-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .luxury-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: linear-gradient(135deg, var(--coral-500), #ff7b7b);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    z-index: 2;
+  }
+
+  /* Info */
+  .luxury-info {
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .luxury-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-600);
+  }
+
+  .luxury-breadcrumb a {
+    color: var(--teal-500);
+    transition: var(--transition);
+  }
+
+  .luxury-breadcrumb a:hover {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+
+  .luxury-breadcrumb i {
+    font-size: 10px;
+    color: var(--text-400);
+  }
+
+  .luxury-title {
+    font-size: 28px;
+    line-height: 1.25;
+    color: var(--text-900);
+    margin: 0;
+  }
+
+  .luxury-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .luxury-stars {
+    display: flex;
+    gap: 3px;
+  }
+
+  .luxury-stars i {
+    font-size: 14px;
+    color: var(--border);
+  }
+
+  .luxury-stars i.active {
+    color: var(--amber-500);
+  }
+
+  .luxury-rating-text {
+    font-weight: 600;
+    color: var(--text-900);
+  }
+
+  .luxury-review-count {
+    color: var(--text-600);
+    font-size: 13px;
+  }
+
+  .luxury-brand {
+    font-size: 13px;
+    color: var(--text-600);
+    margin-left: auto;
+  }
+
+  .luxury-brand i {
+    color: var(--teal-500);
+    margin-right: 4px;
+  }
+
+  .luxury-price-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px 20px;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+  }
+
+  .luxury-price {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--teal-500);
+    letter-spacing: -0.5px;
+  }
+
+  .luxury-mrp {
+    font-size: 18px;
+    color: var(--text-400);
+    text-decoration: line-through;
+    margin-left: 10px;
+  }
+
+  .luxury-discount {
+    margin-left: 10px;
+    background: linear-gradient(135deg, var(--coral-500), #ff7b7b);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .luxury-stock {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .luxury-stock.in {
+    color: #10b981;
+  }
+
+  .luxury-stock.out {
+    color: var(--coral-500);
+  }
+
+  .luxury-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .luxury-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+    font-family: var(--font-body);
+    white-space: nowrap;
+  }
+
+  .luxury-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(18, 20, 43, 0.18);
+  }
+
+  .luxury-btn-primary {
+    background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+    color: white;
+  }
+
+  .luxury-btn-accent {
+    background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+    color: var(--ink-900);
+  }
+
+  .luxury-btn-ghost {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-900);
+  }
+
+  .luxury-btn-ghost:hover {
+    border-color: var(--teal-500);
+    color: var(--teal-500);
+    background: rgba(0, 194, 168, 0.04);
+  }
+
+  .luxury-description {
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .luxury-description h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .luxury-description h3 i {
+    color: var(--teal-500);
+  }
+
+  .luxury-description p {
+    color: var(--text-600);
+    line-height: 1.75;
+    font-size: 14px;
+  }
+
+  /* Section */
+  .luxury-section {
+    padding: 28px 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  .luxury-section--last {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .luxury-section-title {
+    font-size: 18px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .luxury-section-title i {
+    color: var(--teal-500);
+  }
+
+  /* Specs */
+  .luxury-specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .luxury-spec {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+  }
+
+  .luxury-spec:hover {
+    border-color: var(--teal-500);
+    transform: translateY(-1px);
+  }
+
+  .luxury-spec-key {
+    font-weight: 600;
+    color: var(--text-900);
+    text-transform: capitalize;
+    font-size: 13px;
+  }
+
+  .luxury-spec-value {
+    color: var(--text-600);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Reviews */
+  .luxury-reviews {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .luxury-review {
+    padding: 18px 20px;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+  }
+
+  .luxury-review:hover {
+    border-color: var(--teal-500);
+    box-shadow: 0 4px 16px rgba(18, 20, 43, 0.06);
+  }
+
+  .luxury-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .luxury-reviewer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .luxury-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .luxury-reviewer-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .luxury-review-date {
+    font-size: 12px;
+    color: var(--text-400);
+  }
+
+  .luxury-review-rating {
+    display: flex;
+    gap: 2px;
+  }
+
+  .luxury-review-rating i {
+    font-size: 12px;
+    color: var(--border);
+  }
+
+  .luxury-review-rating i.active {
+    color: var(--amber-500);
+  }
+
+  .luxury-review-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .luxury-review-text {
+    color: var(--text-600);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .luxury-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-400);
+  }
+
+  .luxury-empty i {
+    font-size: 48px;
+    opacity: 0.4;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .luxury-empty p {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  /* Related */
+  .luxury-related {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .luxury-related-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .luxury-related-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(18, 20, 43, 0.1);
+    border-color: var(--teal-500);
+  }
+
+  .luxury-related-img {
+    position: relative;
+    height: 160px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .luxury-related-img img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    padding: 12px;
+  }
+
+  .luxury-related-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .luxury-related-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .luxury-related-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--teal-500);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .luxury-hero {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .luxury-gallery {
+      position: static;
+    }
+
+    .luxury-info {
+      padding: 24px;
+    }
+
+    .luxury-section {
+      padding: 24px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 16px 12px;
+    }
+
+    .luxury-title {
+      font-size: 22px;
+    }
+
+    .luxury-price {
+      font-size: 26px;
+    }
+
+    .luxury-actions {
+      flex-direction: column;
+    }
+
+    .luxury-btn {
+      width: 100%;
+    }
+
+    .luxury-specs {
+      grid-template-columns: 1fr;
+    }
+
+    .luxury-related {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Review Form */
+  .luxury-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 600px;
+  }
+
+  .luxury-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .luxury-form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-900);
+  }
+
+  .form-input,
+  .form-select {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg);
+    transition: var(--transition);
+    font-family: var(--font-body);
+  }
+
+  .form-input:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(0, 194, 168, 0.08);
+  }
+
+  .luxury-link {
+    color: var(--teal-500);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .luxury-link:hover {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}

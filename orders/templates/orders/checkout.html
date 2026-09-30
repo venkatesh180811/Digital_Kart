@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding:30px 20px; display:flex; gap:24px; flex-wrap:wrap;">
+  <form method="post" style="flex:2; min-width:320px;">
+    {% csrf_token %}
+    <div class="card" style="padding:20px; margin-bottom:20px;">
+      <h3 style="font-size:15px; margin-bottom:14px;">Deliver to</h3>
+      {% for address in addresses %}
+        <label style="display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;">
+          <input type="radio" name="address_id" value="{{ address.id }}" {% if address.is_default %}checked{% endif %} required>
+          <span>{{ address.full_name }} — {{ address.address_line1 }}, {{ address.city }}, {{ address.state }} {{ address.pincode }}</span>
+        </label>
+      {% empty %}
+        <p>No saved addresses. <a href="{% url 'accounts:address_add' %}">Add one</a> before checking out.</p>
+      {% endfor %}
+    </div>
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:15px; margin-bottom:14px;">Payment Method</h3>
+      <label style="display:block; padding:8px 0;"><input type="radio" name="payment_method" value="cod" checked> Cash on Delivery</label>
+      <label style="display:block; padding:8px 0;"><input type="radio" name="payment_method" value="razorpay"> Razorpay (Cards / UPI / Netbanking)</label>
+      <label style="display:block; padding:8px 0;"><input type="radio" name="payment_method" value="stripe"> Stripe</label>
+    </div>
+    {% if addresses %}
+      <button type="submit" class="btn btn-primary" style="margin-top:20px;">Place Order</button>
+    {% else %}
+      <a href="{% url 'accounts:address_add' %}" class="btn btn-primary" style="margin-top:20px;">Add a Delivery Address to Continue</a>
+    {% endif %}
+  </form>
+
+  <div style="flex:1; min-width:260px;">
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:15px; margin-bottom:14px;">Order Summary</h3>
+      {% for item in items %}
+        <div style="display:flex; justify-content:space-between; font-size:13px; padding:5px 0;"><span>{{ item.product.name }} x{{ item.quantity }}</span><span>₹{{ item.line_total }}</span></div>
+      {% endfor %}
+      <div style="display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-top:1px solid var(--border); margin-top:8px;"><span>GST</span><span>₹{{ gst }}</span></div>
+      <div style="display:flex; justify-content:space-between; font-size:14px; padding:6px 0;"><span>Shipping</span><span>{% if shipping == 0 %}FREE{% else %}₹{{ shipping }}{% endif %}</span></div>
+      <div style="display:flex; justify-content:space-between; font-weight:700; font-size:16px; padding:10px 0; border-top:1px solid var(--border);"><span>Total</span><span>₹{{ grand_total }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

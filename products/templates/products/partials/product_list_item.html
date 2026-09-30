@@ -1,0 +1,60 @@
+{% load static %}
+{% load humanize %}
+<div class="listing-row">
+  <div class="listing-image">
+    <a href="{{ product.get_absolute_url }}">
+      {% with product.images.first as img %}
+        {% if img %}
+          <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+        {% else %}
+          <div class="listing-image-placeholder">
+            <i class="fa-solid fa-image"></i>
+          </div>
+        {% endif %}
+      {% endwith %}
+    </a>
+    <form action="{% url 'wishlist:wishlist_add' product.id %}" method="post" class="listing-wishlist-form">
+      {% csrf_token %}
+      <button type="button" class="listing-wishlist-btn" data-wishlist-url="{% url 'wishlist:wishlist_add' product.id %}" data-in-wishlist="{% if product.id in wishlist_ids %}true{% else %}false{% endif %}" aria-label="Add to Wishlist">
+        <i class="fa-{% if product.id in wishlist_ids %}solid{% else %}regular{% endif %} fa-heart wishlist-icon"></i>
+      </button>
+    </form>
+  </div>
+  <div class="listing-details">
+    <a href="{{ product.get_absolute_url }}" class="listing-title">{{ product.name }}</a>
+    {% if product.brand %}
+      <div class="listing-brand">{{ product.brand.name }}</div>
+    {% endif %}
+    <div class="listing-rating">
+      <span class="listing-rating-badge">
+        <i class="fa-solid fa-star"></i> {{ product.average_rating|default:"0.0" }}
+      </span>
+      {% if product.review_count %}
+        <span class="listing-review-count">{{ product.review_count }} Ratings & Reviews</span>
+      {% else %}
+        <span class="listing-review-count">New</span>
+      {% endif %}
+    </div>
+    {% if product.specifications %}
+      <ul class="listing-specs">
+        {% for key, value in product.specifications.items|slice:":6" %}
+          <li><span class="spec-key">{{ key }}:</span> {{ value }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+  <div class="listing-price">
+    <div class="listing-price-main">₹{{ product.price|floatformat:0|intcomma }}</div>
+    {% if product.mrp > product.price %}
+      <div class="listing-price-mrp">₹{{ product.mrp|floatformat:0|intcomma }}</div>
+      <div class="listing-discount">{{ product.discount_percent }}% off</div>
+    {% endif %}
+    <div class="listing-offers">
+      {% if product.in_stock %}
+        <span class="offer-tag">Free Delivery</span>
+      {% endif %}
+      <span class="offer-tag offer-bank">Bank Offer</span>
+      <span class="offer-tag offer-exchange">Exchange Offer</span>
+    </div>
+  </div>
+</div>

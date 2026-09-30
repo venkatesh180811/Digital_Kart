@@ -1,0 +1,33 @@
+{% load static %}
+{% load humanize %}
+<div class="home-card">
+  <div class="home-card-image">
+    <a href="{{ product.get_absolute_url }}">
+      {% with product.images.first as img %}
+        {% if img %}
+          <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+        {% else %}
+          <div class="home-card-placeholder">
+            <i class="fa-solid fa-image"></i>
+          </div>
+        {% endif %}
+      {% endwith %}
+    </a>
+    {% if product.discount_percent > 0 %}
+      <span class="home-card-badge">{{ product.discount_percent }}% OFF</span>
+    {% endif %}
+    {% if not product.in_stock %}
+      <div class="home-card-out-of-stock">Out of stock</div>
+    {% endif %}
+    <form action="{% url 'wishlist:wishlist_add' product.id %}" method="post" class="home-wishlist-form">
+      {% csrf_token %}
+      <button type="button" class="home-wishlist-btn" data-wishlist-url="{% url 'wishlist:wishlist_add' product.id %}" data-in-wishlist="{% if product.id in wishlist_ids %}true{% else %}false{% endif %}" aria-label="Add to Wishlist">
+        <i class="fa-{% if product.id in wishlist_ids %}solid{% else %}regular{% endif %} fa-heart wishlist-icon"></i>
+      </button>
+    </form>
+  </div>
+  <a href="{{ product.get_absolute_url }}" class="home-card-body">
+    <div class="home-card-price">From ₹{{ product.price|floatformat:0|intcomma }}</div>
+    <h3 class="home-card-name">{{ product.name }}</h3>
+  </a>
+</div>

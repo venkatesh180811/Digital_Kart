@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding:30px 20px; max-width:500px;">
+  <div class="card" style="padding:24px;">
+    <h2 style="font-size:18px; margin-bottom:16px;">Return {{ item.product_name }}</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Reason</label>
+        <select name="reason" class="form-select">
+          <option value="defective">Defective</option>
+          <option value="wrong_item">Wrong Item</option>
+          <option value="not_needed">No Longer Needed</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Comments</label>
+        <textarea name="comments" class="form-input" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Submit Return Request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Profile — DigitalKart{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+{% block content %}
+
+<div class="profile-page">
+  
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="header-content">
+      <div class="avatar-section">
+        <div class="avatar-ring">
+          {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="avatar-img">
+          {% else %}
+            <div class="avatar-fallback">
+              <span>{{ user.username|first|upper }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="user-info">
+        <h1 class="user-name">{{ user.username }}</h1>
+        <p class="user-email"><i class="fa-solid fa-envelope"></i> {{ user.email }}</p>
+        {% if user.phone_number %}
+          <p class="user-phone"><i class="fa-solid fa-phone"></i> {{ user.phone_number }}</p>
+        {% endif %}
+        <div class="user-badges">
+          {% if user.is_seller %}
+            <span class="badge badge-seller">Seller</span>
+          {% else %}
+            <span class="badge badge-premium">Premium</span>
+          {% endif %}
+          <span class="badge badge-verified">
+            <i class="fa-solid fa-circle-check"></i> Verified
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Dashboard -->
+  <div class="stats-grid">
+    <a href="{% url 'orders:order_list' %}" class="stat-card">
+      <div class="stat-icon">
+        <i class="fa-solid fa-box"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ user.order_set.count|default:0 }}</span>
+        <span class="stat-label">Total Orders</span>
+      </div>
+    </a>
+    <a href="{% url 'wishlist:wishlist' %}" class="stat-card">
+      <div class="stat-icon">
+        <i class="fa-solid fa-heart"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ user.wishlist_items.count|default:0 }}</span>
+        <span class="stat-label">Wishlist</span>
+      </div>
+    </a>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ user.reviews.count|default:0 }}</span>
+        <span class="stat-label">Reviews</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fa-solid fa-bookmark"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ user.saved_cards.count|default:0 }}</span>
+        <span class="stat-label">Saved Cards</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="main-grid">
+    
+    <!-- Left Column -->
+    <div class="left-column">
+      
+      <!-- Personal Information -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-user"></i> Personal Information</h2>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" id="personal-form">
+            {% csrf_token %}
+            
+            <!-- Profile Picture Upload -->
+            <div class="profile-upload">
+              <div class="profile-preview-container">
+                {% if user.profile_picture %}
+                  <img src="{{ user.profile_picture.url }}" id="profile-preview" alt="Profile" class="profile-preview-img">
+                {% else %}
+                  <div id="profile-preview" class="profile-preview-fallback">
+                    <span>{{ user.username|first|upper }}</span>
+                  </div>
+                {% endif %}
+                <label for="profile-picture-input" class="profile-upload-btn">
+                  <i class="fa-solid fa-camera"></i>
+                </label>
+              </div>
+              <input type="file" id="profile-picture-input" name="{{ form.profile_picture.name }}" accept="image/*" style="display: none;" onchange="previewImage(this)">
+              <p class="profile-upload-text">Click the camera icon to upload a new profile picture</p>
+            </div>
+            
+            <div class="form-grid">
+              {% for field in form %}
+                {% if field.name != 'profile_picture' %}
+                  <div class="form-group {% if field.name == 'bio' %}full-width{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                      <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ field.errors|striptags }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-check"></i> Save Changes
+              </button>
+              <button type="button" class="btn btn-outline" onclick="resetForm()">Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Security Section -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-shield-halved"></i> Security</h2>
+        </div>
+        <div class="card-body">
+          <div class="security-item">
+            <div class="security-info">
+              <h4>Change Password</h4>
+              <p>Update your password regularly for better security</p>
+            </div>
+            <a href="{% url 'accounts:change_password' %}" class="btn btn-outline">Change</a>
+          </div>
+          <div class="security-item">
+            <div class="security-info">
+              <h4>Two-Factor Authentication</h4>
+              <p>Add an extra layer of security to your account</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" {% if user.is_2fa_enabled %}checked{% endif %}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="security-item">
+            <div class="security-info">
+              <h4>Active Sessions</h4>
+              <p>Manage your logged-in devices</p>
+            </div>
+            <a href="{% url 'accounts:sessions' %}" class="btn btn-outline">Manage</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-bell"></i> Notifications</h2>
+        </div>
+        <div class="card-body">
+          <div class="notification-item">
+            <div class="notification-info">
+              <h4>Email Notifications</h4>
+              <p>Receive updates about your orders and account</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="notification-item">
+            <div class="notification-info">
+              <h4>SMS Alerts</h4>
+              <p>Get SMS notifications for order updates</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="notification-item">
+            <div class="notification-info">
+              <h4>Offers & Promotions</h4>
+              <p>Receive emails about deals and discounts</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="right-column">
+      
+      <!-- Recent Orders -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Orders</h2>
+          <a href="{% url 'orders:order_list' %}" class="link">View All</a>
+        </div>
+        <div class="card-body">
+          {% if user.order_set.all %}
+            <div class="orders-list">
+              {% for order in user.order_set.all|slice:":5" %}
+                <div class="order-item">
+                  <div class="order-main">
+                    <div class="order-id">#{{ order.id }}</div>
+                    <div class="order-date">{{ order.created_at|date:"M d, Y" }}</div>
+                  </div>
+                  <div class="order-details">
+                    <span class="order-amount">₹{{ order.total_amount }}</span>
+                    <span class="order-status status-{{ order.status }}">{{ order.get_status_display }}</span>
+                  </div>
+                  <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-ghost">Track</a>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="fa-solid fa-box-open"></i>
+              <p>No orders yet</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Wishlist Preview -->
+      {% if user.wishlist_items.all %}
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-heart"></i> Wishlist</h2>
+          <a href="{% url 'wishlist:wishlist' %}" class="link">View All</a>
+        </div>
+        <div class="card-body">
+          <div class="wishlist-grid">
+            {% for item in user.wishlist_items.all|slice:":4" %}
+              <div class="wishlist-item">
+                <div class="wishlist-img">
+                  {% if item.product.images.first %}
+                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}">
+                  {% else %}
+                    <div class="wishlist-placeholder">
+                      <i class="fa-solid fa-image"></i>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="wishlist-info">
+                  <p class="wishlist-name">{{ item.product.name|truncatechars:25 }}</p>
+                  <p class="wishlist-price">₹{{ item.product.price }}</p>
+                </div>
+                <div class="wishlist-actions">
+                  <form method="post" action="{% url 'cart:cart_add' item.product.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-primary" title="Move to Cart">
+                      <i class="fa-solid fa-cart-plus"></i>
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'wishlist:wishlist_remove' item.product.id %}" style="display:inline;" onsubmit="return confirm('Remove from wishlist?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-ghost" title="Remove">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Account Actions -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-gear"></i> Account</h2>
+        </div>
+        <div class="card-body">
+          <div class="action-list">
+            <a href="{% url 'accounts:address_list' %}" class="action-item">
+              <div class="action-icon">
+                <i class="fa-solid fa-map-marker-alt"></i>
+              </div>
+              <div class="action-info">
+                <h4>Addresses</h4>
+                <p>Manage delivery addresses</p>
+              </div>
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            <a href="{% url 'accounts:saved_cards' %}" class="action-item">
+              <div class="action-icon">
+                <i class="fa-solid fa-credit-card"></i>
+              </div>
+              <div class="action-info">
+                <h4>Saved Cards</h4>
+                <p>Manage your saved payment cards</p>
+              </div>
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            <a href="{% url 'dashboard:seller_register' %}" class="action-item">
+              <div class="action-icon">
+                <i class="fa-solid fa-store"></i>
+              </div>
+              <div class="action-info">
+                <h4>Become a Seller</h4>
+                <p>Start selling on DigitalKart</p>
+              </div>
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="action-item danger">
+              <div class="action-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+              </div>
+              <div class="action-info">
+                <h4>Logout</h4>
+                <p>Sign out of your account</p>
+              </div>
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('profile-preview');
+      if (preview) {
+        preview.outerHTML = '<img src="' + e.target.result + '" alt="Profile" class="profile-preview-img" id="profile-preview" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:4px solid var(--teal-500);box-shadow:var(--shadow-card);">';
+      }
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function resetForm() {
+  const phoneInput = document.querySelector('input[name="phone_number"]');
+  if (phoneInput) {
+    phoneInput.value = '';
+  }
+
+  const fileInput = document.getElementById('profile-picture-input');
+  if (fileInput) {
+    fileInput.value = '';
+  }
+}
+
+// Notification toggles
+document.querySelectorAll('.notification-item input[type="checkbox"]').forEach(toggle => {
+  toggle.addEventListener('change', function() {
+    const label = this.closest('.notification-item').querySelector('h4').textContent;
+    const state = this.checked ? 'enabled' : 'disabled';
+    
+    let toast = document.querySelector('.toast-notification');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'toast-notification';
+      toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--teal-500);color:white;padding:12px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:1000;font-size:14px;font-weight:600;transform:translateY(100px);transition:transform 0.3s ease;';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = label + ' ' + state;
+    toast.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      toast.style.transform = 'translateY(100px)';
+    }, 2500);
+  });
+});
+</script>
+
+{% endblock %}
